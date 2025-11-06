@@ -3,6 +3,8 @@ plugins {
     id 'biz.aQute.bnd.builder' version "${bnd_version}"
 }
 
+version = project.bundle_version
+
 dependencies {
     implementation project(':core.api')
 

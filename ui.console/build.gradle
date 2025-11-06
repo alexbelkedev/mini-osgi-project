@@ -5,14 +5,13 @@ plugins {
 
 version = project.bundle_version
 
+dependencies {
+    implementation project(':core.api')
+    compileOnly 'org.osgi:org.osgi.service.component.annotations:1.5.1'
+}
+
 java {
     toolchain {
         languageVersion = JavaLanguageVersion.of(project.java_source as Integer)
     }
-    sourceCompatibility = JavaVersion.toVersion(project.java_source)
-    targetCompatibility = JavaVersion.toVersion(project.java_target)
-}
-
-repositories {
-    mavenCentral()
 }
