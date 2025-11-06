@@ -1,0 +1,13 @@
+pluginManagement {
+    repositories {
+        gradlePluginPortal()
+        mavenCentral()
+    }
+    plugins {
+        id 'biz.aQute.bnd.builder' version '6.4.0'
+    }
+}
+
+rootProject.name = "mini-osgi-project"
+
+include("core.api", "core.impl", "ui.console")
