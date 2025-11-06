@@ -1,0 +1,20 @@
+plugins {
+    id 'java'
+    id 'biz.aQute.bnd.builder' version "${bnd_version}"
+}
+
+dependencies {
+    implementation project(':core.api')
+
+    // Declarative Services annotations (contains @Component, @Reference, etc.)
+    compileOnly 'org.osgi:org.osgi.service.component.annotations:1.5.1'
+
+    // Optional: additional OSGi metadata annotations
+    compileOnly 'org.osgi:org.osgi.annotation.versioning:1.1.2'
+}
+
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(project.java_source as Integer)
+    }
+}

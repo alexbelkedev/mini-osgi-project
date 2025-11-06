@@ -1,0 +1,16 @@
+plugins {
+    id 'java'
+    id 'biz.aQute.bnd.builder' version "${bnd_version}"
+}
+
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(project.java_source as Integer)
+    }
+    sourceCompatibility = JavaVersion.toVersion(project.java_source)
+    targetCompatibility = JavaVersion.toVersion(project.java_target)
+}
+
+repositories {
+    mavenCentral()
+}
