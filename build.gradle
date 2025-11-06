@@ -3,3 +3,38 @@ allprojects{
         mavenCentral()
     }
 }
+
+// === Auto-copy OSGi bundles after build ===
+def runtimeBundlesDir = file("$rootDir/runtime/app")
+
+subprojects {
+    tasks.register("copyToFelix", Copy) {
+        dependsOn("build")
+        from(layout.buildDirectory.dir("libs")) {
+            include("${project.name}-*.jar")
+        }
+        into("$rootDir/runtime/app")
+
+        doFirst {
+            println "📦 Copying JARs for project '${project.name}'..."
+        }
+
+        doLast {
+            fileTree("$rootDir/runtime/app").matching {
+                include("${project.name}-*.jar")
+            }.files.each { jar ->
+                println "✅ Copied: ${jar.name} → runtime/app"
+            }
+        }
+    }
+}
+
+tasks.register("deployToFelix") {
+    dependsOn(":core.api:copyToFelix", ":core.impl:copyToFelix", ":ui.console:copyToFelix")
+    doFirst {
+        println "🚀 Deploying all bundles to runtime/app..."
+    }
+    doLast {
+        println "🎉 All bundles copied successfully!"
+    }
+}
