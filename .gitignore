@@ -11,3 +11,7 @@ build/
 
 # Logs
 *.log
+
+# Felix runtime
+runtime/**
+!runtime/README.md
