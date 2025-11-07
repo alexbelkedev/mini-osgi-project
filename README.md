@@ -1,93 +1,140 @@
-# Mini OSGi Project
+# 🧩 Mini OSGi Project
 
-This is a minimal modular OSGi project built with **Gradle** and **bnd** to learn and experiment with OSGi concepts such as modularization, service registration, and dynamic dependency management.
-
----
-
-## 🚀 Project Overview
-
-The project consists of three modules:
-
-| Module | Description |
-|--------|--------------|
-| **core.api** | Defines the public API and OSGi service interfaces. |
-| **core.impl** | Implements the `core.api` services and registers them as OSGi components. |
-| **ui.console** | Provides a simple command-line interface (CLI) to interact with the OSGi services. |
+This is a minimal, Gradle-based **OSGi project** designed to demonstrate modular development with:
+- Apache Felix framework as the runtime
+- Declarative Services (SCR) for dependency injection
+- Gogo shell for command interaction
+- Automatic Gradle tasks for build and deployment
 
 ---
 
-## 🛠 Tech Stack
-
-- **Java 21**
-- **Gradle 9.2.0**
-- **bnd (OSGi build tool)**
-- **Apache Felix (runtime framework)** — planned for later testing
-- **IntelliJ IDEA** (recommended IDE)
-
----
-
-## 📂 Project Structure
+## 📦 Project Structure
 
 ```
 mini-osgi-project/
-├── core.api/           # API definitions (interfaces)
-│   └── src/main/java/
-├── core.impl/          # Implementations (@Component classes)
-│   └── src/main/java/
-├── ui.console/         # Simple CLI bundle (later)
-│   └── src/main/java/
-├── gradle/             # Gradle wrapper
-├── gradle.properties   # Shared Gradle configuration
-├── settings.gradle     # Module definitions
-├── build.gradle        # Root Gradle file
-└── .gitignore
+ ├── core.api/        → Public API interfaces (e.g. GreetingService)
+ ├── core.impl/       → Implementations of core services
+ ├── ui.console/      → Gogo shell commands and console UI
+ ├── runtime/         → External Felix runtime (excluded from Git)
+ │    ├── felix/      → Felix framework (downloaded manually)
+ │    └── app/        → Bundles deployed automatically by Gradle
+ ├── build.gradle     → Root Gradle configuration
+ ├── gradle.properties
+ ├── settings.gradle
+ └── README.md        → This file
 ```
 
 ---
 
-## ⚙️ Build Instructions
+## 🧱 Requirements
 
-### 1️⃣ Clean and build all modules
-```bash
-./gradlew clean build
+- **Java 17+**  
+- **Gradle 8+**
+- Internet access (for downloading dependencies)
+- Apache Felix framework (see below)
+
+---
+
+## ⚙️ Setup Instructions
+
+### 1️⃣ Download Apache Felix
+
+Download the latest **Felix Framework** (e.g. version 7.0.5) from the official site:
+
+👉 [https://felix.apache.org/documentation/downloads.html](https://felix.apache.org/documentation/downloads.html)
+
+Direct link:
+```
+https://dlcdn.apache.org/felix/org.apache.felix.main.distribution-7.0.5.zip
 ```
 
-## Build a specific module
-
-```bash
-./grandlew :core.imple:build
+Extract it to:
+```
+runtime/felix/
 ```
 
-### Verify build success
-The compiled JARs will appear under each module:
+After extraction, ensure this path exists:
+```
+runtime/felix/bin/felix.jar
+```
 
-- core.api/build/libs/
-- core.impl/build/libs/
+---
 
-## 🧠 Learning Goals
+### 2️⃣ Build and Deploy Bundles
 
-- Understand how OSGi bundles interact through service interfaces.
-- Learn how to use bnd annotations (@Component, @Reference, etc.).
-- Build modular, maintainable Java code following Clean Architecture principles.
-- Prepare for OpenEMS contribution or similar enterprise-level OSGi platforms.
+Run:
+```bash
+./gradlew deployToFelix
+```
 
-## 🧰 Useful Gradle Commands
+This will:
+- Build all submodules (`core.api`, `core.impl`, `ui.console`)
+- Remove old JARs
+- Copy the new ones into `runtime/app/`
+- Clear the Felix runtime cache
 
-| Command | Description |
-|--------|--------------|
-| ./gradlew tasks | Lists all available Gradle tasks. |
-| ./gradlew dependencies | Shows project dependencies. |
-| ./gradlew build --scan |Builds with detailed diagnostics. |
+---
 
-## 👨‍💻 Author
-Alex Belke
+### 3️⃣ Run Apache Felix
 
-Java / Kotlin Developer • Passionate about clean architecture and modular design
+You can start Felix manually:
+```bash
+java -jar runtime/felix/bin/felix.jar
+```
 
-📍 Germany 🇩🇪
+Or use Gradle to start it in the background:
+```bash
+./gradlew runFelixDetached
+```
 
-## 🪶 License
+Stop it anytime with:
+```bash
+./gradlew stopFelix
+```
 
-This project is for educational and learning purposes only.
+---
 
-No production use or redistribution intended.
+### 4️⃣ Try It Out
+
+Inside the Felix console:
+```bash
+g! greet:hello Alex
+Hello, Alex! Greetings from OSGi!
+```
+
+To list all active components:
+```bash
+scr:list
+```
+
+---
+
+## 🔄 Helpful Gradle Tasks
+
+| Task | Description |
+|------|--------------|
+| `clean` | Clean all build outputs |
+| `deployToFelix` | Build and copy bundles into `runtime/app` |
+| `runFelixDetached` | Launch Felix in background (logs to `runtime/felix/felix.log`) |
+| `stopFelix` | Stop running Felix instances |
+| `clearFelixCache` | Clear OSGi runtime cache |
+
+---
+
+## 🧹 Git Guidelines
+
+The `runtime/` folder is ignored by Git (except `runtime/README.md`).  
+It’s safe to delete or recreate anytime — Gradle will rebuild the bundles automatically.
+
+---
+
+### 🧠 Author Notes
+
+This project is intentionally small and modular — it can serve as:
+- A learning base for OSGi development
+- A template for building microservice-like modular Java systems
+- A reference for integrating Gradle and Felix smoothly
+
+---
+
+> 🧰 “Build small, modular, and composable — that’s the OSGi way.”
