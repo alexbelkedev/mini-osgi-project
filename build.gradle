@@ -10,17 +10,33 @@ def runtimeBundlesDir = file("$rootDir/runtime/app")
 subprojects {
     tasks.register("copyToFelix", Copy) {
         dependsOn("build")
+
+        def targetDir = file("$rootDir/runtime/app")
+
+        // Step 1: remove old JARs for this module
+        doFirst {
+            def pattern = "${project.name}-*.jar"
+            def oldJars = fileTree(targetDir).matching { include(pattern) }.files
+            if (!oldJars.empty) {
+                println "🧹 Removing old JARs for '${project.name}'..."
+                oldJars.each { jar ->
+                    println "   🗑️ Deleted: ${jar.name}"
+                    jar.delete()
+                }
+            } else {
+                println "🧩 No old JARs to remove for '${project.name}'."
+            }
+        }
+
+        // Step 2: copy new JARs
         from(layout.buildDirectory.dir("libs")) {
             include("${project.name}-*.jar")
         }
-        into("$rootDir/runtime/app")
+        into(targetDir)
 
-        doFirst {
-            println "📦 Copying JARs for project '${project.name}'..."
-        }
-
+        // Step 3: log result
         doLast {
-            fileTree("$rootDir/runtime/app").matching {
+            fileTree(targetDir).matching {
                 include("${project.name}-*.jar")
             }.files.each { jar ->
                 println "✅ Copied: ${jar.name} → runtime/app"
@@ -29,12 +45,69 @@ subprojects {
     }
 }
 
+// Helper task to clear Felix cache
+tasks.register("clearFelixCache", Delete) {
+    delete "$rootDir/runtime/felix/felix-cache"
+    doFirst {
+        println "🧼 Clearing Felix runtime cache..."
+    }
+    doLast {
+        println "✨ Felix cache cleared."
+    }
+}
+
+// Combined deploy task
 tasks.register("deployToFelix") {
-    dependsOn(":core.api:copyToFelix", ":core.impl:copyToFelix", ":ui.console:copyToFelix")
+    dependsOn("clearFelixCache", ":core.api:copyToFelix", ":core.impl:copyToFelix", ":ui.console:copyToFelix")
     doFirst {
         println "🚀 Deploying all bundles to runtime/app..."
     }
     doLast {
-        println "🎉 All bundles copied successfully!"
+        println "🎉 All bundles deployed successfully!"
+        println "💡 Tip: Start Felix with 'java -jar runtime/felix/bin/felix.jar'"
+    }
+}
+
+tasks.register("runFelixDetached", Exec) {
+    dependsOn("deployToFelix")
+
+    def felixJar = "$rootDir/runtime/felix/bin/felix.jar"
+    def felixDir = "$rootDir/runtime/felix"
+    def logFile = "$felixDir/felix.log"
+
+    doFirst {
+        println "🧹 Clearing old log file..."
+        def log = file(logFile)
+        if (log.exists()) log.text = ""
+
+        println "🚀 Launching Felix in background..."
+        println "💡 Tip: View logs with: tail -f runtime/felix/felix.log"
+    }
+
+    // ✅ Exec-type task executes this directly
+    commandLine "bash", "-c", "nohup java -jar '${felixJar}' > '${logFile}' 2>&1 &"
+    workingDir felixDir
+    ignoreExitValue = true
+}
+
+
+tasks.register("stopFelix", Exec) {
+    doFirst {
+        println "🛑 Stopping any running Felix instance..."
+    }
+
+    // Cross-platform process termination
+    if (System.getProperty("os.name").toLowerCase().contains("windows")) {
+        // Windows
+        commandLine "cmd", "/c", "taskkill /F /IM java.exe /FI \"WINDOWTITLE eq Apache Felix*\" || exit 0"
+    } else {
+        // macOS / Linux
+        commandLine "bash", "-c", "pkill -f 'java.*felix.jar' || true"
+    }
+
+    ignoreExitValue = true
+
+    doLast {
+        println "✅ Felix stopped (if it was running)."
     }
 }
